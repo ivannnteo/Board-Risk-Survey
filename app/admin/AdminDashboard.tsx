@@ -16,9 +16,6 @@ type Stats = {
 };
 
 const DELETE_CONFIRM_PHRASE = 'DELETE';
-const RSM_GREY = '#A7A9AC';
-const RSM_GREEN = '#63A70A';
-const RSM_BLUE = '#0071CE';
 
 function formatTimeAgo(date: Date | null) {
   if (!date) return '';
@@ -116,22 +113,17 @@ export default function AdminDashboard() {
 
   return (
     <main className="min-h-screen" style={{ backgroundColor: COLORS.paper }}>
-      <div className="h-2 w-full" style={{ background: `linear-gradient(90deg, ${RSM_GREY} 0%, ${RSM_GREY} 10%, ${RSM_GREEN} 10%, ${RSM_GREEN} 24%, ${RSM_BLUE} 24%, ${RSM_BLUE} 100%)` }} />
       <div className="py-8 px-4 sm:px-8">
       <div className="mx-auto w-full max-w-[1800px]">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-          <div className="flex items-center gap-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/rsm-logo.png" alt="RSM" className="h-8 w-auto" />
-            <div>
-              <h1 style={{ color: COLORS.ink }} className="font-serif text-xl sm:text-2xl font-bold">
-                Boardroom Risk Survey
-              </h1>
-              <p style={{ color: COLORS.muted }} className="text-sm">
-                {stats?.totalResponses ?? 0} response{stats?.totalResponses === 1 ? '' : 's'} collected
-                {lastRefreshed ? ` · updated ${formatTimeAgo(lastRefreshed)}` : ''}
-              </p>
-            </div>
+          <div>
+            <h1 style={{ color: COLORS.ink }} className="font-serif text-xl sm:text-2xl font-bold">
+              Boardroom Risk Survey
+            </h1>
+            <p style={{ color: COLORS.muted }} className="text-sm">
+              {stats?.totalResponses ?? 0} response{stats?.totalResponses === 1 ? '' : 's'} collected
+              {lastRefreshed ? ` · updated ${formatTimeAgo(lastRefreshed)}` : ''}
+            </p>
           </div>
           <div className="flex gap-2 flex-wrap">
             <button

@@ -24,11 +24,17 @@ export const PASTEL_RISK_COLORS: Record<string, string> = {
   ai_tech: '#5C87AD',
 };
 
+// Traffic-light scale: red (Not Prepared) through green (Very Prepared).
 export const PASTEL_RATING_COLORS: Record<string, string> = {
-  'Not Prepared': '#E56A5D',
-  'Somewhat Prepared': '#EFA043',
-  Prepared: '#4E8FE0',
-  'Very Prepared': '#4FAE5C',
+  'Not Prepared': '#E14B3D',
+  'Somewhat Prepared': '#EF8A2E',
+  Prepared: '#F0C93E',
+  'Very Prepared': '#4CAE4C',
 };
 
 export const PASTEL_BAR_COLOR = '#8B6FD1';
+
+// RSM brand colors, used for the shared top bar and logo across every page.
+export const RSM_GREY = '#A7A9AC';
+export const RSM_GREEN = '#63A70A';
+export const RSM_BLUE = '#0071CE';

@@ -6,10 +6,27 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList,
 } from 'recharts';
 import { ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react';
-import { COLORS } from '@/lib/theme';
+import { COLORS, RSM_GREY, RSM_GREEN, RSM_BLUE } from '@/lib/theme';
 
 function pad(n: number) {
   return String(n).padStart(2, '0');
+}
+
+export function TopBrandBar() {
+  return (
+    <div>
+      <div
+        className="h-2 w-full"
+        style={{
+          background: `linear-gradient(90deg, ${RSM_GREY} 0%, ${RSM_GREY} 10%, ${RSM_GREEN} 10%, ${RSM_GREEN} 24%, ${RSM_BLUE} 24%, ${RSM_BLUE} 100%)`,
+        }}
+      />
+      <div className="px-4 sm:px-8 pt-5">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/rsm-logo.png" alt="RSM" className="h-12 sm:h-14 w-auto" />
+      </div>
+    </div>
+  );
 }
 
 export function ProgressHeader({ step, total, label }: { step: number; total: number; label: string }) {
