@@ -1,0 +1,159 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { RefreshCw, LogOut, BarChart3 } from 'lucide-react';
+import { COLORS, PASTEL_RISK_COLORS, PASTEL_RATING_COLORS, PASTEL_BAR_COLOR } from '@/lib/theme';
+import type { Rating } from '@/lib/domain';
+import { Card, PieBlock, BarBlock, ColumnBlock, type ChartDatum } from '../components/ui';
+
+type Stats = {
+  totalResponses: number;
+  riskFrequency: { id: string; label: string; short: string; color: string; value: number }[];
+  top3Ids: string[];
+  top3PreparednessByRisk: { id: string; label: string; short: string; color: string; distribution: { name: Rating; value: number }[] }[];
+  barrierFrequency: { id: string; label: string; value: number }[];
+};
+
+function formatTimeAgo(date: Date | null) {
+  if (!date) return '';
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 10) return 'just now';
+  if (seconds < 60) return `${seconds}s ago`;
+  return `${Math.floor(seconds / 60)}m ago`;
+}
+
+export default function AdminDashboard() {
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const router = useRouter();
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/admin/stats', { cache: 'no-store' });
+      if (res.status === 401) {
+        router.push('/admin/login');
+        return;
+      }
+      if (!res.ok) throw new Error('Failed to load dashboard data.');
+      setStats(await res.json());
+      setLastRefreshed(new Date());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load dashboard data.');
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    load();
+    const interval = setInterval(load, 20000);
+    return () => clearInterval(interval);
+  }, [load]);
+
+  async function handleLogout() {
+    await fetch('/api/admin/logout', { method: 'POST' });
+    router.push('/admin/login');
+  }
+
+  const riskColumnData: ChartDatum[] =
+    stats?.riskFrequency.map((r) => ({ name: r.short, value: r.value, color: PASTEL_RISK_COLORS[r.id] ?? COLORS.ledger })) ?? [];
+  const barrierBarData: ChartDatum[] =
+    stats?.barrierFrequency.filter((b) => b.value > 0).map((b) => ({ name: b.label, value: b.value, color: PASTEL_BAR_COLOR })) ?? [];
+
+  return (
+    <main className="min-h-screen py-8 px-4" style={{ backgroundColor: COLORS.paper }}>
+      <div className="mx-auto max-w-4xl">
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+          <div>
+            <h1 style={{ color: COLORS.ink }} className="font-serif text-xl sm:text-2xl font-bold">
+              Live Results
+            </h1>
+            <p style={{ color: COLORS.muted }} className="text-sm">
+              {stats?.totalResponses ?? 0} response{stats?.totalResponses === 1 ? '' : 's'} collected
+              {lastRefreshed ? ` · updated ${formatTimeAgo(lastRefreshed)}` : ''}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={load}
+              disabled={loading}
+              style={{ borderColor: COLORS.line, color: COLORS.ink }}
+              className="px-3 py-2 rounded-sm border text-sm font-medium flex items-center gap-2 disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+            </button>
+            <button onClick={handleLogout} style={{ borderColor: COLORS.line, color: COLORS.ink }} className="px-3 py-2 rounded-sm border text-sm font-medium flex items-center gap-2">
+              <LogOut className="w-4 h-4" /> Log out
+            </button>
+          </div>
+        </div>
+
+        {error && (
+          <p style={{ color: '#B3452C' }} className="text-sm mb-4">
+            {error}
+          </p>
+        )}
+
+        {stats && stats.totalResponses === 0 && !loading ? (
+          <div style={{ color: COLORS.muted }} className="text-center py-16">
+            <BarChart3 className="w-12 h-12 mx-auto mb-3" />
+            <p>No responses yet — results will appear here as clients complete the survey.</p>
+          </div>
+        ) : (
+          <div className="grid gap-5">
+            <Card wide>
+              <h3 style={{ color: COLORS.ink }} className="font-semibold mb-1">
+                Risk Frequency — Full Ranking
+              </h3>
+              <p style={{ color: COLORS.muted }} className="text-xs mb-4">
+                Question 1 — all 10 risk categories, by number of times selected
+              </p>
+              <ColumnBlock data={riskColumnData} />
+            </Card>
+
+            <div>
+              <h3 style={{ color: COLORS.ink }} className="font-semibold mb-1">
+                Preparedness Index
+              </h3>
+              <p style={{ color: COLORS.muted }} className="text-xs mb-3">
+                For each of the top 3 most-selected risks — Not Prepared 0–25% · Somewhat Prepared 26–50% · Prepared
+                51–75% · Very Prepared 76–100%
+              </p>
+              <div className="grid md:grid-cols-3 gap-5">
+                {stats?.top3PreparednessByRisk.map((risk) => {
+                  const data: ChartDatum[] = risk.distribution
+                    .filter((d) => d.value > 0)
+                    .map((d) => ({ name: d.name, value: d.value, color: PASTEL_RATING_COLORS[d.name] }));
+                  return (
+                    <Card key={risk.id}>
+                      <h4 style={{ color: COLORS.ink }} className="font-medium text-sm mb-3">
+                        {risk.label}
+                      </h4>
+                      <PieBlock data={data} stacked />
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Card wide>
+              <h3 style={{ color: COLORS.ink }} className="font-semibold mb-1">
+                Biggest Barriers to Resilience
+              </h3>
+              <p style={{ color: COLORS.muted }} className="text-xs mb-4">
+                What do you believe is the biggest barrier preventing organisations from becoming more resilient to
+                emerging risks?
+              </p>
+              <BarBlock data={barrierBarData} fullLabels axisWidth={220} />
+            </Card>
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}

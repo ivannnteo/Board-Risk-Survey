@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Response {
+  id           String   @id @default(uuid())
+  createdAt    DateTime @default(now())
+
+  // Ordered risk ids, exactly 3, index 0 = rank #1.
+  topRisks     String[]
+
+  // { [riskId]: number[] } - indices (0-5) of preparedness actions selected, per top risk.
+  preparedness Json
+
+  barrier      String
+  barrierOther String?
+}
