@@ -12,7 +12,7 @@ function pad(n: number) {
   return String(n).padStart(2, '0');
 }
 
-export function TopBrandBar() {
+export function TopBrandBar({ title, subtitle }: { title?: ReactNode; subtitle?: ReactNode } = {}) {
   return (
     <div>
       <div
@@ -21,9 +21,21 @@ export function TopBrandBar() {
           background: `linear-gradient(90deg, ${RSM_GREY} 0%, ${RSM_GREY} 10%, ${RSM_GREEN} 10%, ${RSM_GREEN} 24%, ${RSM_BLUE} 24%, ${RSM_BLUE} 100%)`,
         }}
       />
-      <div className="px-4 sm:px-8 pt-5">
+      <div className="px-4 sm:px-8 pt-5 pb-1 flex items-center gap-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/rsm-logo.png" alt="RSM" className="h-12 sm:h-14 w-auto" />
+        <img src="/rsm-logo.png" alt="RSM" className="h-12 sm:h-14 w-auto flex-shrink-0" />
+        {title && (
+          <div>
+            <h1 style={{ color: COLORS.ink }} className="font-serif text-xl sm:text-2xl font-bold">
+              {title}
+            </h1>
+            {subtitle && (
+              <p style={{ color: COLORS.muted }} className="text-sm">
+                {subtitle}
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

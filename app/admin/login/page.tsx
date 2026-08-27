@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { COLORS } from '@/lib/theme';
+import { TopBrandBar } from '../../components/ui';
 
 export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
@@ -36,7 +37,9 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main className="min-h-screen py-8 px-4 flex items-center justify-center" style={{ backgroundColor: COLORS.paper }}>
+    <main className="min-h-screen flex flex-col" style={{ backgroundColor: COLORS.paper }}>
+      <TopBrandBar />
+      <div className="flex-1 py-8 px-4 flex items-center justify-center">
       <div className="w-full max-w-sm">
         <Link
           href="/"
@@ -79,6 +82,7 @@ export default function AdminLoginPage() {
           </button>
         </form>
         </div>
+      </div>
       </div>
     </main>
   );

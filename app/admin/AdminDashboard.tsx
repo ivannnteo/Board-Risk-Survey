@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { RefreshCw, LogOut, BarChart3, Download, Trash2, X, AlertTriangle } from 'lucide-react';
 import { COLORS, PASTEL_RISK_COLORS, PASTEL_RATING_COLORS, PASTEL_BAR_COLOR } from '@/lib/theme';
 import type { Rating } from '@/lib/domain';
-import { Card, PieBlock, BarBlock, ColumnBlock, type ChartDatum } from '../components/ui';
+import { Card, PieBlock, BarBlock, ColumnBlock, TopBrandBar, type ChartDatum } from '../components/ui';
 
 type Stats = {
   totalResponses: number;
@@ -113,18 +113,18 @@ export default function AdminDashboard() {
 
   return (
     <main className="min-h-screen" style={{ backgroundColor: COLORS.paper }}>
+      <TopBrandBar
+        title="Boardroom Risk Survey"
+        subtitle={
+          <>
+            {stats?.totalResponses ?? 0} response{stats?.totalResponses === 1 ? '' : 's'} collected
+            {lastRefreshed ? ` · updated ${formatTimeAgo(lastRefreshed)}` : ''}
+          </>
+        }
+      />
       <div className="py-8 px-4 sm:px-8">
       <div className="mx-auto w-full max-w-[1800px]">
-        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-          <div>
-            <h1 style={{ color: COLORS.ink }} className="font-serif text-xl sm:text-2xl font-bold">
-              Boardroom Risk Survey
-            </h1>
-            <p style={{ color: COLORS.muted }} className="text-sm">
-              {stats?.totalResponses ?? 0} response{stats?.totalResponses === 1 ? '' : 's'} collected
-              {lastRefreshed ? ` · updated ${formatTimeAgo(lastRefreshed)}` : ''}
-            </p>
-          </div>
+        <div className="flex items-center justify-end mb-6 flex-wrap gap-3">
           <div className="flex gap-2 flex-wrap">
             <button
               onClick={load}
