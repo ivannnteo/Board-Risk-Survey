@@ -121,11 +121,8 @@ export default function AdminDashboard() {
             {lastRefreshed ? ` · updated ${formatTimeAgo(lastRefreshed)}` : ''}
           </>
         }
-      />
-      <div className="py-8 px-4 sm:px-8">
-      <div className="mx-auto w-full max-w-[1800px]">
-        <div className="flex items-center justify-end mb-6 flex-wrap gap-3">
-          <div className="flex gap-2 flex-wrap">
+        actions={
+          <>
             <button
               onClick={load}
               disabled={loading}
@@ -153,9 +150,11 @@ export default function AdminDashboard() {
             <button onClick={handleLogout} style={{ borderColor: COLORS.line, color: COLORS.ink }} className="px-3 py-2 rounded-sm border text-sm font-medium flex items-center gap-2">
               <LogOut className="w-4 h-4" /> Log out
             </button>
-          </div>
-        </div>
-
+          </>
+        }
+      />
+      <div className="py-8 px-4 sm:px-8">
+      <div className="mx-auto w-full max-w-[1800px]">
         {error && (
           <p style={{ color: '#B3452C' }} className="text-sm mb-4">
             {error}
