@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { RefreshCw, LogOut, BarChart3 } from 'lucide-react';
+import { RefreshCw, LogOut, BarChart3, Download, Trash2, X, AlertTriangle } from 'lucide-react';
 import { COLORS, PASTEL_RISK_COLORS, PASTEL_RATING_COLORS, PASTEL_BAR_COLOR } from '@/lib/theme';
 import type { Rating } from '@/lib/domain';
 import { Card, PieBlock, BarBlock, ColumnBlock, type ChartDatum } from '../components/ui';
@@ -12,8 +12,10 @@ type Stats = {
   riskFrequency: { id: string; label: string; short: string; color: string; value: number }[];
   top3Ids: string[];
   top3PreparednessByRisk: { id: string; label: string; short: string; color: string; distribution: { name: Rating; value: number }[] }[];
-  barrierFrequency: { id: string; label: string; value: number }[];
+  barrierFrequency: { id: string; label: string; value: number; entries: string[] }[];
 };
+
+const DELETE_CONFIRM_PHRASE = 'DELETE';
 
 function formatTimeAgo(date: Date | null) {
   if (!date) return '';
@@ -28,6 +30,10 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const router = useRouter();
 
   const load = useCallback(async () => {
@@ -60,14 +66,54 @@ export default function AdminDashboard() {
     router.push('/admin/login');
   }
 
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const res = await fetch('/api/admin/export');
+      if (!res.ok) throw new Error('Export failed.');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const disposition = res.headers.get('Content-Disposition') ?? '';
+      const match = disposition.match(/filename="([^"]+)"/);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = match?.[1] ?? 'responses.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Export failed.');
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleConfirmDelete() {
+    setDeleting(true);
+    try {
+      const res = await fetch('/api/admin/responses', { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete responses.');
+      setShowDeleteModal(false);
+      setDeleteConfirmText('');
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to delete responses.');
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   const riskColumnData: ChartDatum[] =
     stats?.riskFrequency.map((r) => ({ name: r.short, value: r.value, color: PASTEL_RISK_COLORS[r.id] ?? COLORS.ledger })) ?? [];
   const barrierBarData: ChartDatum[] =
-    stats?.barrierFrequency.filter((b) => b.value > 0).map((b) => ({ name: b.label, value: b.value, color: PASTEL_BAR_COLOR })) ?? [];
+    stats?.barrierFrequency
+      .filter((b) => b.value > 0)
+      .map((b) => ({ name: b.label, value: b.value, color: PASTEL_BAR_COLOR, details: b.entries.length ? b.entries : undefined })) ?? [];
 
   return (
-    <main className="min-h-screen py-8 px-4" style={{ backgroundColor: COLORS.paper }}>
-      <div className="mx-auto max-w-4xl">
+    <main className="min-h-screen h-full py-8 px-4 sm:px-8" style={{ backgroundColor: COLORS.paper }}>
+      <div className="mx-auto w-full max-w-[1800px]">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <div>
             <h1 style={{ color: COLORS.ink }} className="font-serif text-xl sm:text-2xl font-bold">
@@ -78,7 +124,7 @@ export default function AdminDashboard() {
               {lastRefreshed ? ` · updated ${formatTimeAgo(lastRefreshed)}` : ''}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={load}
               disabled={loading}
@@ -86,6 +132,22 @@ export default function AdminDashboard() {
               className="px-3 py-2 rounded-sm border text-sm font-medium flex items-center gap-2 disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+            </button>
+            <button
+              onClick={handleExport}
+              disabled={exporting || !stats?.totalResponses}
+              style={{ borderColor: COLORS.line, color: COLORS.ink }}
+              className="px-3 py-2 rounded-sm border text-sm font-medium flex items-center gap-2 disabled:opacity-50"
+            >
+              <Download className="w-4 h-4" /> {exporting ? 'Exporting…' : 'Export to Excel'}
+            </button>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              disabled={!stats?.totalResponses}
+              style={{ borderColor: '#E8B0A8', color: '#B3452C' }}
+              className="px-3 py-2 rounded-sm border text-sm font-medium flex items-center gap-2 disabled:opacity-50"
+            >
+              <Trash2 className="w-4 h-4" /> Delete All
             </button>
             <button onClick={handleLogout} style={{ borderColor: COLORS.line, color: COLORS.ink }} className="px-3 py-2 rounded-sm border text-sm font-medium flex items-center gap-2">
               <LogOut className="w-4 h-4" /> Log out
@@ -147,13 +209,76 @@ export default function AdminDashboard() {
               </h3>
               <p style={{ color: COLORS.muted }} className="text-xs mb-4">
                 What do you believe is the biggest barrier preventing organisations from becoming more resilient to
-                emerging risks?
+                emerging risks? — hover a bar to see individual responses (free text for &ldquo;Others&rdquo;).
               </p>
               <BarBlock data={barrierBarData} fullLabels axisWidth={220} />
             </Card>
           </div>
         )}
       </div>
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div style={{ backgroundColor: COLORS.white }} className="w-full max-w-sm rounded-sm p-6">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5" style={{ color: '#B3452C' }} />
+                <h3 style={{ color: COLORS.ink }} className="font-semibold">
+                  Delete all responses?
+                </h3>
+              </div>
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteConfirmText('');
+                }}
+                style={{ color: COLORS.muted }}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p style={{ color: COLORS.muted }} className="text-sm mb-4">
+              This permanently deletes all {stats?.totalResponses ?? 0} response
+              {stats?.totalResponses === 1 ? '' : 's'} from the database. This cannot be undone. Type{' '}
+              <span style={{ color: COLORS.ink }} className="font-semibold">
+                {DELETE_CONFIRM_PHRASE}
+              </span>{' '}
+              to confirm.
+            </p>
+            <input
+              autoFocus
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder={DELETE_CONFIRM_PHRASE}
+              style={{ borderColor: COLORS.line, color: COLORS.ink }}
+              className="w-full px-4 py-2.5 rounded-sm border text-sm mb-4"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteConfirmText('');
+                }}
+                style={{ borderColor: COLORS.line, color: COLORS.ink }}
+                className="px-4 py-2 rounded-sm border text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={deleteConfirmText !== DELETE_CONFIRM_PHRASE || deleting}
+                style={{
+                  backgroundColor: deleteConfirmText !== DELETE_CONFIRM_PHRASE || deleting ? COLORS.disabled : '#B3452C',
+                  color: COLORS.white,
+                }}
+                className="px-4 py-2 rounded-sm text-sm font-semibold flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" /> {deleting ? 'Deleting…' : 'Delete permanently'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

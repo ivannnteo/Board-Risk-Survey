@@ -106,7 +106,7 @@ export function Card({ children, wide }: { children: ReactNode; wide?: boolean }
   );
 }
 
-export type ChartDatum = { name: string; value: number; color?: string };
+export type ChartDatum = { name: string; value: number; color?: string; details?: string[] };
 
 export function PieBlock({ data, stacked }: { data: ChartDatum[]; stacked?: boolean }) {
   const total = data.reduce((s, d) => s + d.value, 0);
@@ -165,6 +165,30 @@ function wrapLabel(text: string, maxCharsPerLine = 26): string[] {
   return lines;
 }
 
+function BarDetailsTooltip({ active, payload }: { active?: boolean; payload?: { payload: ChartDatum }[] }) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload;
+  return (
+    <div
+      style={{ borderColor: COLORS.line, backgroundColor: COLORS.white }}
+      className="border rounded-sm px-3 py-2 shadow-sm max-w-xs"
+    >
+      <p style={{ color: COLORS.ink }} className="text-xs font-semibold mb-1">
+        {d.name} — {d.value}
+      </p>
+      {d.details && d.details.length > 0 && (
+        <ul className="space-y-1 mt-1.5 pt-1.5 border-t" style={{ borderColor: COLORS.line }}>
+          {d.details.map((text, i) => (
+            <li key={i} style={{ color: COLORS.muted }} className="text-xs leading-snug">
+              &ldquo;{text}&rdquo;
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function WrappingYAxisTick({ x, y, payload }: { x?: number; y?: number; payload?: { value: string } }) {
   const lines = wrapLabel(payload?.value ?? '');
   const lineHeight = 13;
@@ -213,7 +237,7 @@ export function BarBlock({
           tickFormatter={fullLabels ? undefined : (v: string) => (v.length > 24 ? v.slice(0, 24) + '…' : v)}
           interval={0}
         />
-        <Tooltip />
+        <Tooltip content={<BarDetailsTooltip />} />
         <Bar dataKey="value" radius={[0, 2, 2, 0]}>
           {data.map((d, i) => (
             <Cell key={i} fill={d.color ?? barColor} />

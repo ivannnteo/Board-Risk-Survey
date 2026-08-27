@@ -2,11 +2,11 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { COOKIE_NAME, verifySession } from '@/lib/auth';
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/admin/stats', '/api/admin/logout'],
+  matcher: ['/admin/:path*', '/api/admin/:path*'],
 };
 
 export async function middleware(req: NextRequest) {
-  if (req.nextUrl.pathname === '/admin/login') {
+  if (req.nextUrl.pathname === '/admin/login' || req.nextUrl.pathname === '/api/admin/login') {
     return NextResponse.next();
   }
 

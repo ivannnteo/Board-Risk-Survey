@@ -2,7 +2,8 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronRight } from 'lucide-react';
+import Link from 'next/link';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { COLORS } from '@/lib/theme';
 
 export default function AdminLoginPage() {
@@ -36,7 +37,15 @@ export default function AdminLoginPage() {
 
   return (
     <main className="min-h-screen py-8 px-4 flex items-center justify-center" style={{ backgroundColor: COLORS.paper }}>
-      <div className="w-full max-w-sm bg-white border rounded-sm p-8" style={{ borderColor: COLORS.line }}>
+      <div className="w-full max-w-sm">
+        <Link
+          href="/"
+          style={{ color: COLORS.muted }}
+          className="inline-flex items-center gap-1 text-sm font-medium mb-4"
+        >
+          <ChevronLeft className="w-4 h-4" /> Back
+        </Link>
+        <div className="bg-white border rounded-sm p-8" style={{ borderColor: COLORS.line }}>
         <p style={{ color: COLORS.brass }} className="font-serif text-xs tracking-widest uppercase text-center mb-2">
           Board Preparedness Register
         </p>
@@ -69,6 +78,7 @@ export default function AdminLoginPage() {
             {loading ? 'Signing in…' : 'Sign in'} {!loading && <ChevronRight className="w-4 h-4" />}
           </button>
         </form>
+        </div>
       </div>
     </main>
   );

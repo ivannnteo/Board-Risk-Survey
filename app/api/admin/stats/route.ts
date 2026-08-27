@@ -50,15 +50,21 @@ export async function GET() {
 
   // Question 3 - biggest barrier frequency (bonus card).
   const barrierCounts: Record<string, number> = {};
+  const barrierEntries: Record<string, string[]> = {};
   BARRIERS.forEach((b) => {
     barrierCounts[b.id] = 0;
+    barrierEntries[b.id] = [];
   });
   responses.forEach((r) => {
     if (r.barrier in barrierCounts) barrierCounts[r.barrier]++;
+    if (r.barrierOther?.trim()) barrierEntries[r.barrier]?.push(r.barrierOther.trim());
   });
-  const barrierFrequency = BARRIERS.map((b) => ({ id: b.id, label: b.label, value: barrierCounts[b.id] })).sort(
-    (a, b) => b.value - a.value,
-  );
+  const barrierFrequency = BARRIERS.map((b) => ({
+    id: b.id,
+    label: b.label,
+    value: barrierCounts[b.id],
+    entries: barrierEntries[b.id],
+  })).sort((a, b) => b.value - a.value);
 
   return NextResponse.json({
     totalResponses: responses.length,
