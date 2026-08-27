@@ -112,12 +112,12 @@ export default function AdminDashboard() {
       .map((b) => ({ name: b.label, value: b.value, color: PASTEL_BAR_COLOR, details: b.entries.length ? b.entries : undefined })) ?? [];
 
   return (
-    <main className="min-h-screen py-8 px-4" style={{ backgroundColor: COLORS.paper }}>
-      <div className="mx-auto max-w-4xl">
+    <main className="min-h-screen py-8 px-4 sm:px-8" style={{ backgroundColor: COLORS.paper }}>
+      <div className="mx-auto w-full max-w-[1800px]">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <div>
             <h1 style={{ color: COLORS.ink }} className="font-serif text-xl sm:text-2xl font-bold">
-              Live Results
+              Boardroom Risk Survey
             </h1>
             <p style={{ color: COLORS.muted }} className="text-sm">
               {stats?.totalResponses ?? 0} response{stats?.totalResponses === 1 ? '' : 's'} collected
@@ -170,7 +170,7 @@ export default function AdminDashboard() {
           <div className="grid gap-5">
             <Card wide>
               <h3 style={{ color: COLORS.ink }} className="font-semibold mb-1">
-                Risk Frequency — Full Ranking
+                Top Risks in the Boardroom
               </h3>
               <p style={{ color: COLORS.muted }} className="text-xs mb-4">
                 Question 1 — all 10 risk categories, by number of times selected
@@ -178,16 +178,15 @@ export default function AdminDashboard() {
               <ColumnBlock data={riskColumnData} />
             </Card>
 
-            <div className="grid md:grid-cols-2 gap-5">
+            <div className="grid gap-5 xl:grid-cols-[2fr_1fr]">
               <Card>
                 <h3 style={{ color: COLORS.ink }} className="font-semibold mb-1">
-                  Preparedness Index
+                  Top 3 Risk - Preparedness Index
                 </h3>
                 <p style={{ color: COLORS.muted }} className="text-xs mb-4">
-                  For each of the top 3 most-selected risks — Not Prepared 0–25% · Somewhat Prepared 26–50% ·
-                  Prepared 51–75% · Very Prepared 76–100%
+                  Not Prepared 0–25% · Somewhat Prepared 26–50% · Prepared 51–75% · Very Prepared 76–100%
                 </p>
-                <div className="space-y-5">
+                <div className="grid sm:grid-cols-3 gap-5">
                   {stats?.top3PreparednessByRisk.map((risk) => {
                     const data: ChartDatum[] = risk.distribution
                       .filter((d) => d.value > 0)
@@ -197,7 +196,7 @@ export default function AdminDashboard() {
                         <h4 style={{ color: COLORS.ink }} className="font-medium text-sm mb-2">
                           {risk.label}
                         </h4>
-                        <PieBlock data={data} />
+                        <PieBlock data={data} stacked />
                       </div>
                     );
                   })}
