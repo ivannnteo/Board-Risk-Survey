@@ -112,8 +112,8 @@ export default function AdminDashboard() {
       .map((b) => ({ name: b.label, value: b.value, color: PASTEL_BAR_COLOR, details: b.entries.length ? b.entries : undefined })) ?? [];
 
   return (
-    <main className="min-h-screen h-full py-8 px-4 sm:px-8" style={{ backgroundColor: COLORS.paper }}>
-      <div className="mx-auto w-full max-w-[1800px]">
+    <main className="min-h-screen py-8 px-4" style={{ backgroundColor: COLORS.paper }}>
+      <div className="mx-auto max-w-4xl">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <div>
             <h1 style={{ color: COLORS.ink }} className="font-serif text-xl sm:text-2xl font-bold">
@@ -178,41 +178,43 @@ export default function AdminDashboard() {
               <ColumnBlock data={riskColumnData} />
             </Card>
 
-            <div>
-              <h3 style={{ color: COLORS.ink }} className="font-semibold mb-1">
-                Preparedness Index
-              </h3>
-              <p style={{ color: COLORS.muted }} className="text-xs mb-3">
-                For each of the top 3 most-selected risks — Not Prepared 0–25% · Somewhat Prepared 26–50% · Prepared
-                51–75% · Very Prepared 76–100%
-              </p>
-              <div className="grid md:grid-cols-3 gap-5">
-                {stats?.top3PreparednessByRisk.map((risk) => {
-                  const data: ChartDatum[] = risk.distribution
-                    .filter((d) => d.value > 0)
-                    .map((d) => ({ name: d.name, value: d.value, color: PASTEL_RATING_COLORS[d.name] }));
-                  return (
-                    <Card key={risk.id}>
-                      <h4 style={{ color: COLORS.ink }} className="font-medium text-sm mb-3">
-                        {risk.label}
-                      </h4>
-                      <PieBlock data={data} stacked />
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
+            <div className="grid md:grid-cols-2 gap-5">
+              <Card>
+                <h3 style={{ color: COLORS.ink }} className="font-semibold mb-1">
+                  Preparedness Index
+                </h3>
+                <p style={{ color: COLORS.muted }} className="text-xs mb-4">
+                  For each of the top 3 most-selected risks — Not Prepared 0–25% · Somewhat Prepared 26–50% ·
+                  Prepared 51–75% · Very Prepared 76–100%
+                </p>
+                <div className="space-y-5">
+                  {stats?.top3PreparednessByRisk.map((risk) => {
+                    const data: ChartDatum[] = risk.distribution
+                      .filter((d) => d.value > 0)
+                      .map((d) => ({ name: d.name, value: d.value, color: PASTEL_RATING_COLORS[d.name] }));
+                    return (
+                      <div key={risk.id}>
+                        <h4 style={{ color: COLORS.ink }} className="font-medium text-sm mb-2">
+                          {risk.label}
+                        </h4>
+                        <PieBlock data={data} />
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
 
-            <Card wide>
-              <h3 style={{ color: COLORS.ink }} className="font-semibold mb-1">
-                Biggest Barriers to Resilience
-              </h3>
-              <p style={{ color: COLORS.muted }} className="text-xs mb-4">
-                What do you believe is the biggest barrier preventing organisations from becoming more resilient to
-                emerging risks? — hover a bar to see individual responses (free text for &ldquo;Others&rdquo;).
-              </p>
-              <BarBlock data={barrierBarData} fullLabels axisWidth={220} />
-            </Card>
+              <Card>
+                <h3 style={{ color: COLORS.ink }} className="font-semibold mb-1">
+                  Biggest Barriers to Resilience
+                </h3>
+                <p style={{ color: COLORS.muted }} className="text-xs mb-4">
+                  What do you believe is the biggest barrier preventing organisations from becoming more resilient
+                  to emerging risks? — hover a bar to see individual responses (free text for &ldquo;Others&rdquo;).
+                </p>
+                <BarBlock data={barrierBarData} fullLabels axisWidth={150} />
+              </Card>
+            </div>
           </div>
         )}
       </div>
